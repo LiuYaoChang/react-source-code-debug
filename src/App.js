@@ -5,7 +5,7 @@ import AppSibling from './components/AppSibling'
 import TasksWithDifferentPriorities from './components/TasksWithDifferentPriorities'
 import SchedulerTask from './components/SchedulerTask'
 import Concurrent from './components/ConcurrentInput'
-import Diff from './components/Diff'
+import Diff from './components/Diff/index'
 import PropsDiff from './components/PropsDiff'
 import Hooks from "./components/Hooks";
 import EventDemo from "./components/EventDemo";
@@ -39,10 +39,10 @@ function App() {
   // return <TasksWithDifferentPriorities/>
 
   // context
-  return <ContextDemo/>
+  // return <ContextDemo/>
 
   // diff 算法
-  // return <Diff ref={'diffRef'}/>
+  return <Diff/>
 }
 
 export default App;

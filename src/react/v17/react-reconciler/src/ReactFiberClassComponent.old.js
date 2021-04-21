@@ -194,6 +194,7 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
+    // 获取事件触发的时间
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
@@ -1040,6 +1041,7 @@ function updateClassInstance(
 
   cloneUpdateQueue(current, workInProgress);
 
+  // 旧的props
   const unresolvedOldProps = workInProgress.memoizedProps;
   const oldProps =
     workInProgress.type === workInProgress.elementType

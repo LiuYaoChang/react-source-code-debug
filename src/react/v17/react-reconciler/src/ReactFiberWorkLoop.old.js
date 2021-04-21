@@ -550,9 +550,11 @@ export function scheduleUpdateOnFiber(
   lane: Lane,
   eventTime: number,
 ) {
+
+  // 死循环检测
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
-
+  // 收集更新 lane
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
@@ -717,21 +719,26 @@ function markUpdateLaneFromFiberToRoot(
 // of the existing task is the same as the priority of the next level that the
 // root has work on. This function is called on every update, and right before
 // exiting a task.
+// 根据任务优先级比对 确定任务是否要 进行 新的调度，|| scheduleCallback 加入shchedule 进行调度
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
 
   // Check if any lanes are being starved by other work. If so, mark them as
   // expired so we know to work on those next.
+  // 如果已经过期，就将这个lan 加入 expired  || 加入到root.expiredLanes 中
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.
+  // nextLanes ，计算任务优先级
   const nextLanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   // This returns the priority level computed during the `getNextLanes` call.
+  // 获取新任务的任务 优先级
   const newCallbackPriority = returnNextLanesPriority();
 
+  // 如果当前fiber 的lanes 已经是 NoLanes 代表任务已经全部执行完。就取消任务调度
   if (nextLanes === NoLanes) {
     // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
@@ -756,6 +763,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // 和 newCallbackPriority不相等，说明newCallbackPriority 一定大于 existingCallbackPriority
     // 所以要取消掉原有的低优先级任务，相等的话说明没必要再重新调度一个，直接复用已有的任务
     // 去做更新
+    // 没有更高优先级任务加入，继续之前的调度工作
     if (existingCallbackPriority === newCallbackPriority) {
       // The priority hasn't changed. We can reuse the existing task. Exit.
       return;
@@ -763,6 +771,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // The priority changed. Cancel the existing callback. We'll schedule a new
     // one below.
     // 取消掉已有任务
+    // 高优先级任务，取消之前的调度工作。
     cancelCallback(existingCallbackNode);
   }
 
@@ -819,6 +828,7 @@ function performConcurrentWorkOnRoot(root) {
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
   const originalCallbackNode = root.callbackNode;
+  // effects 执行
   const didFlushPassiveEffects = flushPassiveEffects();
   if (didFlushPassiveEffects) {
     // Something in the passive effect phase may have canceled the current task.
@@ -898,6 +908,7 @@ function performConcurrentWorkOnRoot(root) {
     finishConcurrentRender(root, exitStatus, lanes);
   }
   ensureRootIsScheduled(root, now());
+  // 中断后的任务继续
   if (root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
@@ -1379,6 +1390,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
     cancelTimeout(timeoutHandle);
   }
 
+  // 由于高优先级重新调度，中断低优先级任务的计算；撤销之前计算过的fiber的工作。
   if (workInProgress !== null) {
     let interruptedWork = workInProgress.return;
     while (interruptedWork !== null) {
@@ -2154,6 +2166,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // the mutation phase, so that the previous tree is still current during
     // componentWillUnmount, but before the layout phase, so that the finished
     // work is current during componentDidMount/Update.
+    // 切换 current fiber 树
     root.current = finishedWork;
 
     // The next phase is the layout phase, where we call effects that read
@@ -2411,6 +2424,7 @@ function commitMutationEffects(
     const primaryFlags = flags & (Placement | Update | Deletion | Hydrating);
     switch (primaryFlags) {
       case Placement: {
+        // 插入dom
         commitPlacement(nextEffect);
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
@@ -2419,6 +2433,7 @@ function commitMutationEffects(
         nextEffect.flags &= ~Placement;
         break;
       }
+      // 插入更新dom
       case PlacementAndUpdate: {
         // Placement
         commitPlacement(nextEffect);

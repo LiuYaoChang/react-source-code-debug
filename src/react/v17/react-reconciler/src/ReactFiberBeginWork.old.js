@@ -3354,6 +3354,7 @@ function beginWork(
     }
     case ClassComponent: {
       const Component = workInProgress.type;
+      // 新的props
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
         workInProgress.elementType === Component

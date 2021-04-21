@@ -116,6 +116,7 @@ export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
 
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
+// 就是任务优先级，它有如下这些值，值越大，优先级越高，暂时只理解任务优先级的作用即可。
 let return_highestLanePriority: LanePriority = DefaultLanePriority;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
@@ -283,6 +284,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
   // Check if any work has expired.
   // 检查是否有更新已经过期
+  // 如果有过期 的lane 优先返回
   if (expiredLanes !== NoLanes) {
     // 已经过期了，就需要把渲染优先级设置为同步，来让更新立即执行
     nextLanes = expiredLanes;
@@ -564,6 +566,7 @@ export function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes {
   return NoLanes;
 }
 
+// 返回最新的任务优先级
 export function returnNextLanesPriority() {
   return return_highestLanePriority;
 }
@@ -790,6 +793,7 @@ export function higherPriorityLane(a: Lane, b: Lane) {
   return a !== NoLane && a < b ? a : b;
 }
 
+// 比较优先级
 export function higherLanePriority(
   a: LanePriority,
   b: LanePriority,
@@ -976,6 +980,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
    * */
 
   // Clear the lanes that no longer have pending work
+  // 清空 lanes  没有其他待执行的任务
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);

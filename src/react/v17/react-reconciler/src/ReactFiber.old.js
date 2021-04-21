@@ -468,6 +468,7 @@ export function createFiberFromTypeAndProps(
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {
+    // 是一个class 
     if (shouldConstruct(type)) {
       fiberTag = ClassComponent;
       if (__DEV__) {
@@ -600,6 +601,7 @@ export function createFiberFromElement(
   const type = element.type;
   const key = element.key;
   const pendingProps = element.props;
+  // 根据计算后的 props 生成 新的fiber节点
   const fiber = createFiberFromTypeAndProps(
     type,
     key,
