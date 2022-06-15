@@ -110,8 +110,9 @@ function shouldHydrateDueToLegacyHeuristic(container) {
   );
 }
 
+// 将根节点，转换成fiber 根节点
 function legacyCreateRootFromDOMContainer(
-  container: Container,
+  container: Container, // 应用窗口
   forceHydrate: boolean,
 ): RootType {
   const shouldHydrate =
@@ -120,6 +121,7 @@ function legacyCreateRootFromDOMContainer(
   if (!shouldHydrate) {
     let warned = false;
     let rootSibling;
+    // 将窗口内的所有节点删除
     while ((rootSibling = container.lastChild)) {
       if (__DEV__) {
         if (
@@ -172,6 +174,7 @@ function warnOnInvalidCallback(callback: mixed, callerName: string): void {
   }
 }
 
+// 开始将react 组件转成fiber 节点
 function legacyRenderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
@@ -188,8 +191,12 @@ function legacyRenderSubtreeIntoContainer(
   // member of intersection type." Whyyyyyy.
   let root: RootType = (container._reactRootContainer: any);
   let fiberRoot;
+  // 应用容器，未生成根的fiber 节点
   if (!root) {
     // Initial mount
+    // 应用容器转换为fiber 节点
+    // 返回的是一个 ReactDOMBlockingRoot 实例，会有一个_internalRoot 属性指向 FiberRoot 节点
+    // fiberRoot.current 指向fiber 节点   root.current = uninitializedFiber;
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
       container,
       forceHydrate,
@@ -203,6 +210,7 @@ function legacyRenderSubtreeIntoContainer(
       };
     }
     // Initial mount should not be batched.
+    // 初次挂载不用batched。
     unbatchedUpdates(() => {
       updateContainer(children, fiberRoot, parentComponent, callback);
     });
@@ -285,8 +293,8 @@ export function hydrate(
 }
 
 export function render(
-  element: React$Element<any>,
-  container: Container,
+  element: React$Element<any>, // 根组件
+  container: Container, // 应用容器
   callback: ?Function,
 ) {
   invariant(
@@ -305,6 +313,7 @@ export function render(
       );
     }
   }
+  // 将react 组件树渲染到容器中
   return legacyRenderSubtreeIntoContainer(
     null,
     element,

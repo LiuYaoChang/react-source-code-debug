@@ -34,7 +34,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pingCache = null;
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
-  this.context = null;
+  this.context = null; // 当前组件 的上下文
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
@@ -97,6 +97,8 @@ export function createFiberRoot(
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
+  // 创建一个更新任务
+  // 将 update 挂载至fiber.updateQueue 中
   initializeUpdateQueue(uninitializedFiber);
 
   return root;

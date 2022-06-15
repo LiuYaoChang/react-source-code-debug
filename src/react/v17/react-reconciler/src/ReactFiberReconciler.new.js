@@ -140,6 +140,7 @@ function getContextForSubtree(
   const fiber = getInstance(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
 
+  // 如果是一个类组件
   if (fiber.tag === ClassComponent) {
     const Component = fiber.type;
     if (isLegacyContextProvider(Component)) {
@@ -248,15 +249,16 @@ export function createContainer(
 }
 
 export function updateContainer(
-  element: ReactNodeList,
-  container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
+  element: ReactNodeList, // 要渲染的组件list
+  container: OpaqueRoot, // fiber根节点
+  parentComponent: ?React$Component<any, any>, // 父组件
   callback: ?Function,
 ): Lane {
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
   const current = container.current;
+  // 开始的调度时间
   const eventTime = requestEventTime();
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
@@ -265,12 +267,14 @@ export function updateContainer(
       warnIfNotScopedWithMatchingAct(current);
     }
   }
+  // 分配一个调度等级
   const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
   }
 
+  // 父组件实例
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
     container.context = context;
@@ -295,6 +299,7 @@ export function updateContainer(
     }
   }
 
+  // 生成一个更新任务
   const update = createUpdate(eventTime, lane);
   // Caution: React DevTools currently depends on this property
   // being called "element".
@@ -314,7 +319,9 @@ export function updateContainer(
     update.callback = callback;
   }
 
+  // 将更新任务加入队列
   enqueueUpdate(current, update);
+  // 开始调度任务
   scheduleUpdateOnFiber(current, lane, eventTime);
 
   return lane;

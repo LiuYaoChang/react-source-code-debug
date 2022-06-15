@@ -131,8 +131,11 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
+    // react-reconciler/src/ReactFiberReconciler 下的createContainer 生成fiber 节点
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
+  // 将fiber 根节点挂载到容器元素的属性上
   markContainerAsRoot(root.current, container);
+  // 窗口元素类型
   const containerNodeType = container.nodeType;
 
   if (enableEagerRootListeners) {

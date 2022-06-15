@@ -400,8 +400,10 @@ export function getCurrentTime() {
   return now();
 }
 
+// 根据fiber 类型返回一个调度优先级
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
+  // mode: NoContext = 0 | ConcurrentMode = 1 | StrictMode = 2 | ProfileMode = 4;
   const mode = fiber.mode;
   if ((mode & BlockingMode) === NoMode) {
     return (SyncLane: Lane);
@@ -457,6 +459,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // TODO: Remove this dependency on the Scheduler priority.
   // To do that, we're replacing it with an update lane priority.
+  // 任务调度优先级
   const schedulerPriority = getCurrentPriorityLevel();
 
   // The old behavior was using the priority level of the Scheduler.
@@ -525,11 +528,19 @@ function requestRetryLane(fiber: Fiber) {
   return findRetryLane(currentEventWipLanes);
 }
 
+/**
+ * fiber 调度
+ * @param {*} fiber fiber 节点
+ * @param {*} lane 调度优先级
+ * @param {*} eventTime 调度开始时间
+ * @returns 
+ */
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
 ) {
+  // 一个组件内
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
 
@@ -585,6 +596,7 @@ export function scheduleUpdateOnFiber(
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
+      // 开始fiber 计算工作
       performSyncWorkOnRoot(root);
     } else {
       ensureRootIsScheduled(root, eventTime);
@@ -638,6 +650,7 @@ function markUpdateLaneFromFiberToRoot(
   lane: Lane,
 ): FiberRoot | null {
   // Update the source fiber's lanes
+  // 将lane 合成一个分组
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
   if (alternate !== null) {
@@ -2388,10 +2401,12 @@ export function schedulePassiveEffectCallback() {
     });
   }
 }
-
+// 刷新副作用函数
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
   if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
+
+    // 如果优先级比较低
     const priorityLevel =
       pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
         ? NormalSchedulerPriority
@@ -2414,6 +2429,12 @@ export function flushPassiveEffects(): boolean {
   return false;
 }
 
+// 执行挂载的 副作用函数
+/**
+ * 
+ * @param {*} root 
+ * @param {*} firstChild  第一个fiber 节点
+ */
 function flushPassiveMountEffects(root, firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
@@ -2425,12 +2446,15 @@ function flushPassiveMountEffects(root, firstChild: Fiber): void {
       }
     }
 
+    // 子树的更新状态 add, delete, update
     const primarySubtreeFlags = fiber.subtreeFlags & PassiveMask;
 
+    // 有子树，且子树有变化进入递归
     if (fiber.child !== null && primarySubtreeFlags !== NoFlags) {
       flushPassiveMountEffects(root, fiber.child);
     }
 
+    // 当前fiber 有变化
     if ((fiber.flags & Passive) !== NoFlags) {
       if (__DEV__) {
         setCurrentDebugFiberInDEV(fiber);
@@ -2539,7 +2563,9 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
   }
 }
 
+// 刷新副作用函数
 function flushPassiveEffectsImpl() {
+  // 没用副作用
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }

@@ -113,7 +113,10 @@ export function getCurrentUpdateLanePriority(): LanePriority {
 export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
   currentUpdateLanePriority = newLanePriority;
 }
-
+// 本文一共提到了4种优先级：事件优先级、更新优先级、任务优先级、调度优先级，它们之间是递进的关系。
+// 事件优先级由事件本身决定，更新优先级由事件计算得出，然后放到root.pendingLanes， 
+// 任务优先级来自root.pendingLanes中最紧急的那些lanes对应的优先级，调度优先级根据任务优先级获取。
+// 几种优先级环环相扣，保证了高优任务的优先执行。
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
 // 就是任务优先级，它有如下这些值，值越大，优先级越高，暂时只理解任务优先级的作用即可。
@@ -264,6 +267,12 @@ export function lanePriorityToSchedulerPriority(
   }
 }
 
+/**
+ * 该函数从root.pendingLanes中找出优先级最高的lane
+ * @param {*} root 
+ * @param {*} wipLanes 
+ * @returns 
+ */
 export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // 该函数从root.pendingLanes中找出优先级最高的lane
 

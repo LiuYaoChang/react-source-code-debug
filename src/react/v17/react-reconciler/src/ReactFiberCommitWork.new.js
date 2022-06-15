@@ -353,6 +353,8 @@ function commitHookEffectListUnmount(
 function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+
+  // effect 链表中的最后一个，双向链表执行
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
@@ -360,6 +362,7 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
       if ((effect.tag & flags) === flags) {
         // Mount
         const create = effect.create;
+        // 执行effect ，并将返回的值，当作destroy 时候执行的 effect。
         effect.destroy = create();
 
         if (__DEV__) {
@@ -1995,16 +1998,19 @@ function commitPassiveMount(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ): void {
+  // 根据组件类型
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent:
     case Block: {
+      // 要监测effect 性能
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
         finishedWork.mode & ProfileMode
       ) {
+        // 记录effect 运行时间
         startPassiveEffectTimer();
         try {
           commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
@@ -2012,6 +2018,7 @@ function commitPassiveMount(
           recordPassiveEffectDuration(finishedWork);
         }
       } else {
+        // 执行effect
         commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
       }
       break;

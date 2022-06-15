@@ -148,7 +148,7 @@ if (__DEV__) {
     currentlyProcessingQueue = null;
   };
 }
-
+// 初始化fiber 的更新队列
 export function initializeUpdateQueue<State>(fiber: Fiber): void {
   const queue: UpdateQueue<State> = {
     baseState: fiber.memoizedState,
@@ -157,7 +157,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     shared: {
       pending: null,
     },
-    effects: null,
+    effects: null, // fiber 关联的副作用
   };
   fiber.updateQueue = queue;
 }
@@ -180,12 +180,16 @@ export function cloneUpdateQueue<State>(
     workInProgress.updateQueue = clone;
   }
 }
-
+/**
+ * 创建一个调度任务
+ * @param {*} eventTime 任务加入调度的开始时间
+ * @param {*} lane 调度任务的优先级
+ * @returns 
+ */
 export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   const update: Update<*> = {
     eventTime,
     lane,
-
     tag: UpdateState,
     payload: null,
     callback: null,
@@ -197,6 +201,7 @@ export function createUpdate(eventTime: number, lane: Lane): Update<*> {
 
 export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   const updateQueue = fiber.updateQueue;
+  // 如果fiber 已经被卸载，就不会再执行
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
     return;
@@ -206,8 +211,10 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   const pending = sharedQueue.pending;
   if (pending === null) {
     // This is the first update. Create a circular list.
+    // 循环队列
     update.next = update;
   } else {
+    // 有未调度的任务在队列中
     update.next = pending.next;
     pending.next = update;
   }

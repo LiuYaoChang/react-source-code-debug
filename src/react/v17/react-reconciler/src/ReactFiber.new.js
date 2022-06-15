@@ -114,7 +114,7 @@ if (__DEV__) {
 let debugCounter = 1;
 
 function FiberNode(
-  tag: WorkTag,
+  tag: WorkTag, // 用于标识fiber 节点类型 eg: FunctionComponent | ClassComponent | HostRoot
   pendingProps: mixed,
   key: null | string,
   mode: TypeOfMode,
@@ -124,12 +124,12 @@ function FiberNode(
   this.key = key;
   this.elementType = null;
   this.type = null;
-  this.stateNode = null;
+  this.stateNode = null; // fiber的实例，类组件场景下，是组件的类，HostComponent场景，是dom元素
 
   // Fiber
-  this.return = null;
-  this.child = null;
-  this.sibling = null;
+  this.return = null; // 指向父级
+  this.child = null; // 自己的第一个子级
+  this.sibling = null; // 兄弟元素
   this.index = 0;
 
   this.ref = null;
@@ -143,10 +143,13 @@ function FiberNode(
   this.mode = mode;
 
   // Effects
+  // flags原为effectTag，表示当前这个fiber节点变化的类型：增、删、改
   this.flags = NoFlags;
   this.subtreeFlags = NoFlags;
   this.deletions = null;
 
+  // this.lanes = NoLanes; // 该fiber中的优先级，它可以判断当前节点是否需要更新
+  // this.childLanes = NoLanes;// 子树中的优先级，它可以判断当前节点的子树是否需要更新
   this.lanes = NoLanes;
   this.childLanes = NoLanes;
 
@@ -209,7 +212,7 @@ const createFiber = function(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
-  mode: TypeOfMode,
+  mode: TypeOfMode, // 当前react fiber 的工作模式
 ): Fiber {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
